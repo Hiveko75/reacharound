@@ -1,5 +1,6 @@
 package com.spanser.reacharound.client.handler;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -17,16 +18,16 @@ public class RayTraceHandler {
     }
 
     public static Pair<Vec3, Vec3> getEntityParams(Entity player) {
-        // Get the player's current rotation
-        float pitch = player.getXRot();
-        float yaw = player.getYRot();
+        return Pair.of(eyePosition(player), aimDirection(player));
+    }
 
-        // Calculate eye position
+    private static Vec3 eyePosition(Entity player) {
         Vec3 pos = player.position();
         double eyeHeight = player instanceof Player ? player.getEyeHeight(player.getPose()) : 0;
-        Vec3 rayPos = new Vec3(pos.x, pos.y + eyeHeight, pos.z);
+        return new Vec3(pos.x, pos.y + eyeHeight, pos.z);
+    }
 
-        // Calculate look direction vector
+    private static Vec3 lookFromRotation(float pitch, float yaw) {
         float yawRad = yaw * (float) Math.PI / 180;
         float pitchRad = pitch * (float) Math.PI / 180;
 
@@ -35,8 +36,37 @@ public class RayTraceHandler {
         float y = -Mth.sin(pitchRad);
         float z = -Mth.cos(yawRad) * horizontalFactor;
 
-        Vec3 ray = new Vec3(x, y, z).normalize();
+        return new Vec3(x, y, z).normalize();
+    }
 
-        return Pair.of(rayPos, ray);
+    /**
+     * Direction from the player's eyes towards what the crosshair is aiming at.
+     * <p>
+     * In first person (and vanilla third person) this is the same as the player's look direction.
+     * Third-person camera mods such as Leawind's Third Person aim the crosshair from a detached camera
+     * and update {@code Minecraft.hitResult} accordingly, while the player itself may face elsewhere.
+     * Aiming at the hit location keeps the reacharound target in line with the crosshair.
+     */
+    public static Vec3 aimDirection(Entity player) {
+        Minecraft client = Minecraft.getInstance();
+        if (player == client.player && client.hitResult != null) {
+            Vec3 toTarget = client.hitResult.getLocation().subtract(eyePosition(player));
+            if (toTarget.lengthSqr() > 1.0e-6) {
+                return toTarget.normalize();
+            }
+        }
+        return lookFromRotation(player.getXRot(), player.getYRot());
+    }
+
+    /** Pitch (degrees, positive = down) of {@link #aimDirection(Entity)}. */
+    public static float aimXRot(Entity player) {
+        Vec3 dir = aimDirection(player);
+        return (float) -Math.toDegrees(Math.asin(Mth.clamp(dir.y, -1.0, 1.0)));
+    }
+
+    /** Yaw (degrees, Minecraft convention) of {@link #aimDirection(Entity)}. */
+    public static float aimYRot(Entity player) {
+        Vec3 dir = aimDirection(player);
+        return (float) Math.toDegrees(Mth.atan2(-dir.x, dir.z));
     }
 }

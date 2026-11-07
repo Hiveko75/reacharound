@@ -74,7 +74,7 @@ public class PlacementFeature {
         BlockState block;
 
         if (isVertical()) {
-            boolean isLookingDown = player.getXRot() > 0;
+            boolean isLookingDown = RayTraceHandler.aimXRot(player) > 0;
 
             ReacharoundTarget target = getCurrentTarget();
             block = player.level().getBlockState(target.pos().offset(0, isLookingDown ? 1 : -1, 0));
@@ -84,7 +84,7 @@ public class PlacementFeature {
                 setCurrentTarget(new ReacharoundTarget(target.pos().offset(0, -1, 0), target.dir(), target.hand()));
             }
         } else {
-            Direction facing = player.getDirection();
+            Direction facing = Direction.fromYRot(RayTraceHandler.aimYRot(player));
             block = player.level().getBlockState(getCurrentTarget().pos().offset(-facing.getStepX(), 0, -facing.getStepZ()));
         }
 
@@ -107,7 +107,7 @@ public class PlacementFeature {
             int z = target.pos().getZ();
             Vec3 source = new Vec3(x, y, z);
 
-            boolean isLookingDown = client.player.getXRot() > 0;
+            boolean isLookingDown = RayTraceHandler.aimXRot(client.player) > 0;
 
             BlockState block = getPlacement(client.player);
 
@@ -119,7 +119,7 @@ public class PlacementFeature {
             if (isVertical()) {
                 direction = Direction.getNearest(0, isLookingDown ? -1 : 1, 0, Direction.UP);
             } else {
-                Direction facing = client.player.getDirection();
+                Direction facing = Direction.fromYRot(RayTraceHandler.aimYRot(client.player));
                 direction = Direction.getNearest(-facing.getStepX(), 0, -facing.getStepZ(), Direction.NORTH);
             }
 
@@ -175,7 +175,7 @@ public class PlacementFeature {
     }
 
     private static ReacharoundTarget getPlayerVerticalReacharoundTarget(Entity player, InteractionHand hand, Level world, Vec3 rayPos, Vec3 ray) {
-        boolean isLookingDown = player.getXRot() > 0;
+        boolean isLookingDown = RayTraceHandler.aimXRot(player) > 0;
         if (isLookingDown) {
             rayPos = rayPos.add(0, LENIENCY_VERTICAL, 0);
         } else {
@@ -210,7 +210,7 @@ public class PlacementFeature {
     }
 
     private static ReacharoundTarget getPlayerHorizontalReacharoundTarget(Entity player, InteractionHand hand, Level world, Vec3 rayPos, Vec3 ray) {
-        Direction dir = Direction.fromYRot(player.getYRot());
+        Direction dir = Direction.fromYRot(RayTraceHandler.aimYRot(player));
         rayPos = rayPos.subtract(LENIENCY_HORIZONTAL * dir.getStepX(), 0, LENIENCY_HORIZONTAL * dir.getStepZ());
         HitResult take2Res = cachedRayTrace(player, world, rayPos, ray, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE);
 
