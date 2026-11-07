@@ -1,6 +1,7 @@
 package com.spanser.reacharound.client.gui;
 
 import com.spanser.reacharound.client.feature.PlacementFeature;
+import com.spanser.reacharound.client.handler.RayTraceHandler;
 import com.spanser.reacharound.config.ReacharoundConfig;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -74,7 +75,7 @@ public class Hud {
 
     public void renderStyleDefault(GuiGraphicsExtractor graphics, int color) {
         if (PlacementFeature.isVertical()) {
-            if ((client.player != null ? client.player.getXRot() : 0) < 0) {
+            if ((client.player != null ? RayTraceHandler.aimXRot(client.player) : 0) < 0) {
                 graphics.pose().translate(0, -4);
             } else {
                 graphics.pose().translate(0, 4);
