@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -292,8 +293,11 @@ public class PlacementFeature {
         while (Reacharound.getInstance().keyBindingToggle.consumeClick()) {
             config.enabled = !config.enabled;
 
-            Component enabledText = Component.translatable(config.enabled ? "reacharound.config.indicator.enabled" : "reacharound.config.indicator.disabled");
-            client.player.sendSystemMessage(Component.literal("Reacharound ").append(enabledText));
+            if (client.player != null) {
+                // Shown above the hotbar (action bar) instead of in chat
+                client.player.sendOverlayMessage(Component.translatable(config.enabled ? "reacharound.message.on" : "reacharound.message.off")
+                        .withStyle(config.enabled ? ChatFormatting.GREEN : ChatFormatting.GRAY));
+            }
         }
     }
 
