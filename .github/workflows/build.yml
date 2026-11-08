@@ -1,5 +1,7 @@
-# Builds the Minecraft 26.3 (Fabric) jar on every push to third-person-compat (or manually from the Actions tab).
-name: Build 26.3 (Fabric)
+# Builds Reacharound (third-person-compat fork) for every supported Minecraft version.
+# Each version lives on its own branch; this workflow checks them out one by one.
+# Run on every push to third-person-compat, or manually from the Actions tab.
+name: Build all versions (Fabric)
 
 on:
   push:
@@ -12,14 +14,32 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mc: '1.21.11'
+            branch: tpcompat-1.21.11
+            java: '21'
+          - mc: '26.1.2'
+            branch: tpcompat-26.1.2
+            java: '25'
+          - mc: '26.2'
+            branch: tpcompat-26.2
+            java: '25'
+          - mc: '26.3'
+            branch: third-person-compat
+            java: '25'
     steps:
-      - name: Checkout
+      - name: Checkout ${{ matrix.branch }}
         uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
 
-      - name: Setup JDK 25
+      - name: Setup JDK ${{ matrix.java }}
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
+          java-version: ${{ matrix.java }}
           distribution: 'temurin'
 
       - name: Setup Gradle
@@ -29,9 +49,27 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew build --stacktrace
+          rm -f build/libs/*-sources.jar
+          ls -l build/libs
 
       - name: Upload jar
         uses: actions/upload-artifact@v4
         with:
-          name: reacharound-26.3-fabric
+          name: reacharound-${{ matrix.mc }}-fabric
           path: build/libs/*.jar
+
+  collect:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: reacharound-*-fabric
+          merge-multiple: true
+          path: dist
+      - run: ls -l dist
+      - name: Upload all jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: reacharound-all-versions
+          path: dist/*.jar
