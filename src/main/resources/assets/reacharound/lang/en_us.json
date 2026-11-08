@@ -42,6 +42,7 @@
   "reacharound.keybinding.category": "Reacharound",
   "key.category.reacharound.keybinding/category": "Reacharound",
   "reacharound.keybinding.toggle": "Toggle Reacharound",
-  "reacharound.message.on": "Reacharound: On",
-  "reacharound.message.off": "Reacharound: Off"
+  "reacharound.message": "Reacharound: %s",
+  "reacharound.message.on": "On",
+  "reacharound.message.off": "Off"
 }

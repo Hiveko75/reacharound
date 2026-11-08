@@ -295,8 +295,9 @@ public class PlacementFeature {
 
             if (client.player != null) {
                 // Shown above the hotbar (action bar) instead of in chat
-                client.player.sendOverlayMessage(Component.translatable(config.enabled ? "reacharound.message.on" : "reacharound.message.off")
-                        .withStyle(config.enabled ? ChatFormatting.GREEN : ChatFormatting.GRAY));
+                Component state = Component.translatable(config.enabled ? "reacharound.message.on" : "reacharound.message.off")
+                        .withStyle(config.enabled ? ChatFormatting.GREEN : ChatFormatting.RED);
+                client.player.sendOverlayMessage(Component.translatable("reacharound.message", state).withStyle(ChatFormatting.GRAY));
             }
         }
     }
