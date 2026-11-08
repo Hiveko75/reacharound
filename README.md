@@ -1,6 +1,6 @@
 # Reacharound
 
-A simple bedrock block placement mod with added support for placing blocks downloads and upwards.
+A simple bedrock block placement mod with added support for placing blocks downwards and upwards.
 
 The core functionality was ported [Quark (Forge)]. The Quark [🔗 License can be found here].
 
