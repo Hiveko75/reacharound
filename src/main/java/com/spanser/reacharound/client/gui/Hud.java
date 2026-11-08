@@ -1,6 +1,7 @@
 package com.spanser.reacharound.client.gui;
 
 import com.spanser.reacharound.client.feature.PlacementFeature;
+import com.spanser.reacharound.client.handler.RayTraceHandler;
 import com.spanser.reacharound.config.ReacharoundConfig;
 
 import net.minecraft.client.MinecraftClient;
@@ -72,7 +73,7 @@ public class Hud {
 
     public void renderStyleDefault(DrawContext context, int color) {
         if (PlacementFeature.isVertical()) {
-            if ((client.player != null ? client.player.getPitch() : 0) < 0) {
+            if ((client.player != null ? RayTraceHandler.aimXRot(client.player) : 0) < 0) {
                 context.getMatrices().translate(0, -4);
             } else {
                 context.getMatrices().translate(0, 4);
