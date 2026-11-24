@@ -1,11 +1,10 @@
 # Builds Reacharound (third-person-compat fork) for every supported Minecraft version.
 # Each version lives on its own branch; this workflow checks them out one by one.
-# Run on every push to third-person-compat, or manually from the Actions tab.
+# Run when started by hand from the Actions tab.
 name: Build all versions (Fabric)
 
+# Started by hand only (Actions -> Run workflow): no builds on push or pull requests.
 on:
-  push:
-    branches: [third-person-compat]
   workflow_dispatch:
 
 permissions:
