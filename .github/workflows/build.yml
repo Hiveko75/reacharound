@@ -57,6 +57,7 @@ jobs:
         with:
           name: reacharound-${{ matrix.mc }}-fabric
           path: build/libs/*.jar
+          retention-days: 14
 
   collect:
     needs: build
@@ -73,3 +74,4 @@ jobs:
         with:
           name: reacharound-all-versions
           path: dist/*.jar
+          retention-days: 14
