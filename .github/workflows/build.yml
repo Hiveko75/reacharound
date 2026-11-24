@@ -10,6 +10,8 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  attestations: write
 
 jobs:
   build:
@@ -58,6 +60,12 @@ jobs:
           name: reacharound-${{ matrix.mc }}-fabric
           path: build/libs/*.jar
           retention-days: 14
+
+      - name: Attest build provenance
+        if: github.event_name != 'pull_request'
+        uses: actions/attest@v4
+        with:
+          subject-path: 'build/libs/*.jar'
 
   collect:
     needs: build
