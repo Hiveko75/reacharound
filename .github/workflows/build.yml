@@ -6,6 +6,11 @@ name: Build all versions (Fabric)
 # Started by hand only (Actions -> Run workflow): no builds on push or pull requests.
 on:
   workflow_dispatch:
+    inputs:
+      release:
+        description: 'Release tag to add the jars to (empty = build only). An existing release gets only the jars it does not have yet.'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -85,3 +90,31 @@ jobs:
           name: reacharound-all-versions
           path: dist/*.jar
           retention-days: 14
+
+  release:
+    needs: collect
+    if: ${{ inputs.release != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: reacharound-all-versions
+          path: dist
+      - name: Add the jars to release ${{ inputs.release }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ inputs.release }}
+        run: |
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" dist/*.jar --target "$GITHUB_SHA" --title "Reacharound $TAG (third-person-compat)" \
+              --notes "Reacharound by spAnser with third-person camera support (the target follows the crosshair, e.g. with Leawind's Third Person) and the on/off message above the hotbar. One jar per Minecraft version (the version is in the file name)."
+            exit 0
+          fi
+          have=$(gh release view "$TAG" --json assets -q '.assets[].name')
+          for f in dist/*.jar; do
+            n=$(basename "$f")
+            if echo "$have" | grep -qxF "$n"; then echo "$n is already in $TAG"; else gh release upload "$TAG" "$f"; fi
+          done
