@@ -19,6 +19,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - mc: '1.21.1'
+            branch: tpcompat-1.21.1
+            java: '21'
           - mc: '1.21.11'
             branch: tpcompat-1.21.11
             java: '21'
