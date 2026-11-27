@@ -15,6 +15,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
@@ -47,7 +48,7 @@ public class PlacementFeature {
         BlockState block;
 
         if (isVertical()) {
-            boolean isLookingDown = player.getPitch() > 0;
+            boolean isLookingDown = RayTraceHandler.aimXRot(player) > 0;
 
             block = player.getWorld().getBlockState(currentTarget.pos().add(0, isLookingDown ? 1 : -1, 0));
             if (isLookingDown && blockIsTopSlab(block)) {
@@ -56,7 +57,7 @@ public class PlacementFeature {
                 currentTarget = new ReacharoundTarget(currentTarget.pos().add(0, -1, 0), currentTarget.dir(), currentTarget.hand());
             }
         } else {
-            Vec3i facing = player.getHorizontalFacing().getVector();
+            Vec3i facing = Direction.fromRotation(RayTraceHandler.aimYRot(player)).getVector();
             block = player.getWorld().getBlockState(currentTarget.pos().add(-facing.getX(), 0, -facing.getZ()));
         }
 
@@ -77,7 +78,7 @@ public class PlacementFeature {
             int z = currentTarget.pos().getZ();
             Vec3d source = new Vec3d(x, y, z);
 
-            boolean isLookingDown = client.player.getPitch() > 0;
+            boolean isLookingDown = RayTraceHandler.aimXRot(client.player) > 0;
 
             BlockState block = getPlacement(client.player);
 
@@ -89,7 +90,7 @@ public class PlacementFeature {
             if (isVertical()) {
                 direction = Direction.fromVector(0, isLookingDown ? -1 : 1, 0);
             } else {
-                Vec3i facing = client.player.getHorizontalFacing().getVector();
+                Vec3i facing = Direction.fromRotation(RayTraceHandler.aimYRot(client.player)).getVector();
                 direction = Direction.fromVector(-facing.getX(), 0, -facing.getZ());
             }
 
@@ -147,7 +148,7 @@ public class PlacementFeature {
     }
 
     private static ReacharoundTarget getPlayerVerticalReacharoundTarget(Entity player, Hand hand, World world, Vec3d rayPos, Vec3d ray) {
-        boolean isLookingDown = player.getPitch() > 0;
+        boolean isLookingDown = RayTraceHandler.aimXRot(player) > 0;
         if (isLookingDown) {
             rayPos = rayPos.add(0, leniency, 0);
         } else {
@@ -177,7 +178,7 @@ public class PlacementFeature {
     }
 
     private static ReacharoundTarget getPlayerHorizontalReacharoundTarget(Entity player, Hand hand, World world, Vec3d rayPos, Vec3d ray) {
-        Direction dir = Direction.fromRotation(player.getYaw());
+        Direction dir = Direction.fromRotation(RayTraceHandler.aimYRot(player));
         rayPos = rayPos.subtract(leniency * dir.getOffsetX(), 0, leniency * dir.getOffsetZ());
         HitResult take2Res = RayTraceHandler.rayTrace(player, world, rayPos, ray, RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE);
 
@@ -250,8 +251,12 @@ public class PlacementFeature {
         while (Reacharound.getInstance().keyBindingToggle.wasPressed()) {
             config.enabled = !config.enabled;
 
-            Text enabledText = Text.translatable(config.enabled ? "reacharound.config.indicator.enabled" : "reacharound.config.indicator.disabled");
-            client.player.sendMessage(Text.literal("Reacharound ").append(enabledText), false);
+            if (client.player != null) {
+                // Shown above the hotbar (action bar) instead of in chat
+                Text state = Text.translatable(config.enabled ? "reacharound.message.on" : "reacharound.message.off")
+                        .formatted(config.enabled ? Formatting.GREEN : Formatting.RED);
+                client.player.sendMessage(Text.translatable("reacharound.message", state).formatted(Formatting.GRAY), true);
+            }
         }
     }
 

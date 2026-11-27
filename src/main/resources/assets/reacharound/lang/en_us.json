@@ -39,5 +39,8 @@
   "reacharound.config.animation.interpolation.none": "None",
   "reacharound.config.animation.fadeInterpolation": "Fade Interpolation",
   "reacharound.keybinding.category": "Reacharound",
-  "reacharound.keybinding.toggle": "Toggle Reacharound"
+  "reacharound.keybinding.toggle": "Toggle Reacharound",
+  "reacharound.message": "Reacharound: %s",
+  "reacharound.message.on": "On",
+  "reacharound.message.off": "Off"
 }

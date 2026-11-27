@@ -1,5 +1,6 @@
 package com.spanser.reacharound.client.handler;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.hit.HitResult;
@@ -17,27 +18,51 @@ public class RayTraceHandler {
     }
 
     public static Pair<Vec3d, Vec3d> getEntityParams(Entity player) {
-        float scale = 1.0F;
-        float pitch = player.prevPitch + (player.getPitch() - player.prevPitch) * scale;
-        float yaw = player.prevYaw + (player.getYaw() - player.prevYaw) * scale;
-        Vec3d pos = player.getPos();
-        double posX = player.prevX + (pos.x - player.prevX) * scale;
-        double posY = player.prevY + (pos.y - player.prevY) * scale;
-        if (player instanceof PlayerEntity) {
-            posY += player.getEyeHeight(player.getPose());
-        }
-        double posZ = player.prevZ + (pos.z - player.prevZ) * scale;
-        Vec3d rayPos = new Vec3d(posX, posY, posZ);
+        return Pair.of(eyePosition(player), aimDirection(player));
+    }
 
+    private static Vec3d eyePosition(Entity player) {
+        Vec3d pos = player.getPos();
+        double eyeHeight = player instanceof PlayerEntity ? player.getEyeHeight(player.getPose()) : 0;
+        return new Vec3d(pos.x, pos.y + eyeHeight, pos.z);
+    }
+
+    private static Vec3d lookFromRotation(float pitch, float yaw) {
         float zYaw = -MathHelper.cos(yaw * (float) Math.PI / 180);
         float xYaw = MathHelper.sin(yaw * (float) Math.PI / 180);
         float pitchMod = -MathHelper.cos(pitch * (float) Math.PI / 180);
         float azimuth = -MathHelper.sin(pitch * (float) Math.PI / 180);
-        float xLen = xYaw * pitchMod;
-        float yLen = zYaw * pitchMod;
-        Vec3d ray = new Vec3d(xLen, azimuth, yLen);
-
-        return Pair.of(rayPos, ray);
+        return new Vec3d(xYaw * pitchMod, azimuth, zYaw * pitchMod);
     }
 
+    /**
+     * Direction from the player's eyes towards what the crosshair is aiming at.
+     * <p>
+     * In first person (and vanilla third person) this is the same as the player's look direction.
+     * Third-person camera mods such as Leawind's Third Person aim the crosshair from a detached camera
+     * and update {@code MinecraftClient.crosshairTarget} accordingly, while the player itself may face
+     * elsewhere. Aiming at the hit location keeps the reacharound target in line with the crosshair.
+     */
+    public static Vec3d aimDirection(Entity player) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (player == client.player && client.crosshairTarget != null) {
+            Vec3d toTarget = client.crosshairTarget.getPos().subtract(eyePosition(player));
+            if (toTarget.lengthSquared() > 1.0e-6) {
+                return toTarget.normalize();
+            }
+        }
+        return lookFromRotation(player.getPitch(), player.getYaw());
+    }
+
+    /** Pitch (degrees, positive = down) of {@link #aimDirection(Entity)}. */
+    public static float aimXRot(Entity player) {
+        Vec3d dir = aimDirection(player);
+        return (float) -Math.toDegrees(Math.asin(MathHelper.clamp(dir.y, -1.0, 1.0)));
+    }
+
+    /** Yaw (degrees, Minecraft convention) of {@link #aimDirection(Entity)}. */
+    public static float aimYRot(Entity player) {
+        Vec3d dir = aimDirection(player);
+        return (float) Math.toDegrees(MathHelper.atan2(-dir.x, dir.z));
+    }
 }
